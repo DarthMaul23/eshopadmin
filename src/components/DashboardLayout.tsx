@@ -68,7 +68,13 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col">
         {/* Topbar */}
         <header className={`flex justify-between items-center ${topbarBg} border-b border-gray-200 p-4`}>
-          <h1 className={`text-xl font-bold ${topbarTextColor}`}>Dashboard</h1>
+          <h1 className={`text-xl font-bold ${topbarTextColor}`}>
+          {menuItems.map((item) => {
+            if (router.pathname === item.href){
+                return (item.label);
+            }
+          })}
+          </h1>
           <div className="relative">
             <button
               onClick={handleToggleUserMenu}

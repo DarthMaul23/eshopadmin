@@ -1,121 +1,261 @@
-import { useState, useEffect, useContext, FormEvent } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
+import { useState, useEffect, useContext, FormEvent, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import DashboardLayout from '@/components/DashboardLayout';
 import { AuthContext } from '@/context/AuthContext';
-import { ItemsApi, Configuration } from '@/api';
+// Import the API classes for items, taxation, and shipping
+import { ItemsApi, Configuration, TaxationApi, ShippingApi } from '@/api';
+import { useDropzone } from 'react-dropzone';
 
-interface StockItem {
+interface Item {
   id: number;
   name: string;
-  stockCount: number;
-  categoryName: string;
+  description: string | null;
+  taxationId: number | null;
+  priceItems?: Array<{ price: number; isSale?: boolean }>;
+  images?: Array<{ base64Data: string; isThumbnail?: boolean; displayOrder?: number }>;
 }
 
-export default function StockPage() {
+interface TaxationOption {
+  id: number;
+  name: string;
+  rate: number;
+}
+
+interface ShippingOption {
+  id: number;
+  name: string;
+  cost: number;
+}
+
+export default function ItemsPage() {
   const { token } = useContext(AuthContext);
   const router = useRouter();
-  const [stockItems, setStockItems] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // State for items, error and loading
+  const [items, setItems] = useState<Item[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // State for filtering items
+  const [filter, setFilter] = useState('');
+
+  // Modal state for creating a new item
   const [showModal, setShowModal] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  const [newItemDescription, setNewItemDescription] = useState('');
+  const [newTaxationId, setNewTaxationId] = useState<number | ''>('');
+  const [newPrice, setNewPrice] = useState<number | ''>('');
+  const [isSale, setIsSale] = useState(false);
+  const [newShippingId, setNewShippingId] = useState<number | ''>('');
 
-  const config = new Configuration({
-    basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
-  });
-  const itemsApi = new ItemsApi(config);
+  // State to hold multiple image Base64 strings
+  const [newImageBase64List, setNewImageBase64List] = useState<string[]>([]);
 
+  // State to hold fetched taxation options and shipping options
+  const [taxationOptions, setTaxationOptions] = useState<TaxationOption[]>([]);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+
+  // Memoize the API configuration and API clients
+  const config = useMemo(
+    () =>
+      new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL }),
+    []
+  );
+  const itemsApi = useMemo(() => new ItemsApi(config), [config]);
+  const taxationApi = useMemo(() => new TaxationApi(config), [config]);
+  const shippingApi = useMemo(() => new ShippingApi(config), [config]);
+
+  // --- Fetch items only once on page load or when token becomes available ---
   useEffect(() => {
     if (!token) {
       router.replace('/login');
       return;
     }
-    itemsApi
-      .apiItemsGet()
-      .then((response) => {
-        setStockItems(response.data || []);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setErrorMsg('Failed to fetch stock items.');
-        setLoading(false);
-      });
-  }, [token, router, itemsApi]);
 
+    const fetchItems = async () => {
+      try {
+        const response = await itemsApi.apiItemsGet();
+        setItems(response.data || []);
+      } catch (error) {
+        console.error('Items fetch error:', error);
+        setErrorMsg('Failed to fetch items.');
+      } finally {
+        setLoadingItems(false);
+      }
+    };
+
+    fetchItems();
+  }, [token, itemsApi, router]);
+
+  // --- Fetch taxation options only once ---
+  useEffect(() => {
+    if (!token) return;
+    const fetchTaxation = async () => {
+      try {
+        const response = await taxationApi.apiTaxationGet();
+        setTaxationOptions(response.data || []);
+      } catch (error) {
+        console.error('Taxation fetch error:', error);
+      }
+    };
+    fetchTaxation();
+  }, [token, taxationApi]);
+
+  // --- Fetch shipping options only once ---
+  useEffect(() => {
+    if (!token) return;
+    const fetchShipping = async () => {
+      try {
+        const response = await shippingApi.apiShippingGet();
+        setShippingOptions(response.data || []);
+      } catch (error) {
+        console.error('Shipping fetch error:', error);
+      }
+    };
+    fetchShipping();
+  }, [token, shippingApi]);
+
+  // --- Handler for adding a new item ---
   const handleAddItem = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const newItem = { name: newItemName, description: null };
-      const response = await itemsApi.apiItemsPost(newItem);
-      setStockItems((prev) => [...prev, response.data]);
+      // Build the payload matching CreateItemWithPricesDto
+      const newItemData = {
+        name: newItemName,
+        description: newItemDescription,
+        taxationId: newTaxationId === '' ? null : Number(newTaxationId),
+        priceItems: newPrice === '' ? null : [{ price: Number(newPrice), isSale }],
+        images:
+          newImageBase64List.length > 0
+            ? newImageBase64List.map((img, index) => ({
+                base64Data: img,
+                // Mark the first image as the thumbnail and assign display order
+                isThumbnail: index === 0,
+                displayOrder: index + 1,
+              }))
+            : null,
+        // Uncomment the next line if your API directly accepts a shipping option:
+        // shippingId: newShippingId === '' ? null : Number(newShippingId),
+      };
+
+      const response = await itemsApi.apiItemsCreateWithPricesPost(newItemData);
+      setItems((prev) => [...prev, response.data]);
+      // Reset form values and close the modal
       setNewItemName('');
+      setNewItemDescription('');
+      setNewTaxationId('');
+      setNewPrice('');
+      setIsSale(false);
+      setNewImageBase64List([]);
+      setNewShippingId('');
       setShowModal(false);
     } catch (error) {
-      console.error(error);
+      console.error('Create item error:', error);
       setErrorMsg('Failed to add new item.');
     }
   };
 
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  // --- Image dropzone handler (allows multiple images) ---
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      // Convert all accepted files to Base64 and add them to the list
+      const toBase64 = (file: File): Promise<string> =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => {
+            if (typeof reader.result === 'string') {
+              resolve(reader.result);
+            } else {
+              reject('Could not convert file to Base64');
+            }
+          };
+          reader.onerror = (error) => reject(error);
+        });
+      try {
+        const base64Files = await Promise.all(
+          acceptedFiles.map((file) => toBase64(file))
+        );
+        // Append new images to the existing list
+        setNewImageBase64List((prev) => [...prev, ...base64Files]);
+      } catch (error) {
+        console.error('Error converting file(s):', error);
+      }
+    },
+    []
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    multiple: true,
+  });
+
   return (
     <DashboardLayout>
-      <header className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold">Manage Stock</h2>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-        >
-          Add Item
-        </button>
+      <header className="flex flex-col sm:flex-row justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold mb-4 sm:mb-0">Manage Items</h2>
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+          <input
+            type="text"
+            placeholder="Filter items..."
+            className="border rounded p-2"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+          >
+            Add Item
+          </button>
+        </div>
       </header>
 
-      {/* Stock Items Table */}
-      <section>
-        <h3 className="text-2xl font-semibold mb-4">Current Stock Items</h3>
-        {loading ? (
-          <p>Loading stock items...</p>
+      {/* Items Table */}
+      <div className="overflow-x-auto border rounded bg-white shadow">
+        {loadingItems ? (
+          <p className="p-4">Loading items...</p>
         ) : errorMsg ? (
-          <p className="text-red-500">{errorMsg}</p>
-        ) : stockItems.length === 0 ? (
-          <p>No items in stock.</p>
+          <p className="p-4 text-red-500">{errorMsg}</p>
+        ) : filteredItems.length === 0 ? (
+          <p className="p-4">No items found.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded shadow">
-              <thead className="bg-gray-100 border-b">
-                <tr>
-                  <th className="p-4 text-left">Item Name</th>
-                  <th className="p-4 text-left">Stock Count</th>
-                  <th className="p-4 text-left">Category</th>
-                  <th className="p-4 text-left">Actions</th>
+          <table className="min-w-full">
+            <thead className="bg-gray-100 border-b">
+              <tr>
+                <th className="px-4 py-2 text-left">Item Name</th>
+                <th className="px-4 py-2 text-left">Description</th>
+                <th className="px-4 py-2 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map((item) => (
+                <tr key={item.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2">{item.name}</td>
+                  <td className="px-4 py-2">{item.description}</td>
+                  <td className="px-4 py-2">
+                    <button
+                      onClick={() => router.push(`/dashboard/stock/${item.id}`)}
+                      className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition"
+                    >
+                      Details
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {stockItems.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">{item.name}</td>
-                    <td className="p-4">{item.stockCount}</td>
-                    <td className="p-4">{item.categoryName}</td>
-                    <td className="p-4 flex gap-2">
-                      <button
-                        className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                        onClick={() => router.push(`/dashboard/stock/${item.id}`)}
-                      >
-                        Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
-      </section>
+      </div>
 
-      {/* Modal for Adding New Stock Item */}
+      {/* Modal for Adding New Item */}
       {showModal && (
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 overflow-y-auto max-h-full">
             <h3 className="text-2xl font-bold mb-4">Add New Item</h3>
             <form onSubmit={handleAddItem} className="space-y-4">
               <div>
@@ -125,9 +265,98 @@ export default function StockPage() {
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
                   className="w-full border rounded p-2"
-                  required
                   placeholder="Enter item name"
+                  required
                 />
+              </div>
+              <div>
+                <label className="block mb-1">Description</label>
+                <textarea
+                  value={newItemDescription}
+                  onChange={(e) => setNewItemDescription(e.target.value)}
+                  className="w-full border rounded p-2"
+                  placeholder="Enter description"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Taxation</label>
+                <select
+                  value={newTaxationId}
+                  onChange={(e) =>
+                    setNewTaxationId(e.target.value === '' ? '' : Number(e.target.value))
+                  }
+                  className="w-full border rounded p-2"
+                >
+                  <option value="">Select taxation (optional)</option>
+                  {taxationOptions.map((tax) => (
+                    <option key={tax.id} value={tax.id}>
+                      {tax.name} ({tax.rate}%)
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block mb-1">Shipping Option</label>
+                <select
+                  value={newShippingId}
+                  onChange={(e) =>
+                    setNewShippingId(e.target.value === '' ? '' : Number(e.target.value))
+                  }
+                  className="w-full border rounded p-2"
+                >
+                  <option value="">Select shipping option (optional)</option>
+                  {shippingOptions.map((ship) => (
+                    <option key={ship.id} value={ship.id}>
+                      {ship.name} (${ship.cost})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block mb-1">Price</label>
+                <input
+                  type="number"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  className="w-full border rounded p-2"
+                  placeholder="Enter price"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isSale}
+                  onChange={(e) => setIsSale(e.target.checked)}
+                  id="isSale"
+                />
+                <label htmlFor="isSale">Is Sale?</label>
+              </div>
+              <div>
+                <label className="block mb-1">Images</label>
+                {/* Multiple files dropzone */}
+                <div
+                  {...getRootProps()}
+                  className="border-dashed border-2 p-4 text-center cursor-pointer rounded"
+                >
+                  <input {...getInputProps()} />
+                  {isDragActive ? (
+                    <p>Drop the images here ...</p>
+                  ) : newImageBase64List.length > 0 ? (
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {newImageBase64List.map((img, index) => (
+                        <img
+                          key={index}
+                          src={img}
+                          alt={`Selected ${index}`}
+                          className="h-24 object-contain border"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p>Drag & drop images here, or click to select files</p>
+                  )}
+                </div>
               </div>
               <div className="flex justify-end gap-4">
                 <button

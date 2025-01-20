@@ -17,7 +17,7 @@ export default function DashboardLayout({
   children,
   sidebarBg = 'bg-gray-800',
   sidebarTextColor = 'text-gray-100',
-  sidebarActiveBg = 'bg-indigo-600',
+  sidebarActiveBg = 'bg-red-600',
   topbarBg = 'bg-white',
   topbarTextColor = 'text-gray-800'
 }: DashboardLayoutProps) {
@@ -34,6 +34,20 @@ export default function DashboardLayout({
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Manage Stock', href: '/dashboard/stock/stock' },
     { label: 'Categories', href: '/dashboard/categories/categories' },
+    { label: 'Taxation', href: '/dashboard/taxation/taxation' },
+    { label: 'Shipping', href: '/dashboard/shipping/shipping' },
+    { label: 'Statistics', href: '/dashboard/statistics' }
+  ];
+
+  // List of topbar label items
+  const labelItems = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Stock', href: '/dashboard/stock/stock' },
+    { label: 'Item Details', href: '/dashboard/stock/[id]' },
+    { label: 'Categories', href: '/dashboard/categories/categories' },
+    { label: 'Category Detail', href: '/dashboard/categories/categories/[id]' },
+    { label: 'Taxation', href: '/dashboard/taxation/taxation' },
+    { label: 'Shipping', href: '/dashboard/shipping/shipping' },
     { label: 'Statistics', href: '/dashboard/statistics' }
   ];
 
@@ -69,7 +83,9 @@ export default function DashboardLayout({
         {/* Topbar */}
         <header className={`flex justify-between items-center ${topbarBg} border-b border-gray-200 p-4`}>
           <h1 className={`text-xl font-bold ${topbarTextColor}`}>
-          {menuItems.map((item) => {
+          {labelItems.map((item) => {
+            console.log(item.href);
+            console.log(router.pathname);
             if (router.pathname === item.href){
                 return (item.label);
             }

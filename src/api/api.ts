@@ -96,21 +96,64 @@ export interface CreateCategoryDto {
 /**
  * 
  * @export
- * @interface CreateItemDto
+ * @interface CreateItemImageDto
  */
-export interface CreateItemDto {
+export interface CreateItemImageDto {
     /**
      * 
      * @type {string}
-     * @memberof CreateItemDto
+     * @memberof CreateItemImageDto
+     */
+    'base64Data': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateItemImageDto
+     */
+    'isThumbnail'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof CreateItemImageDto
+     */
+    'displayOrder'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface CreateItemWithPricesDto
+ */
+export interface CreateItemWithPricesDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateItemWithPricesDto
      */
     'name': string;
     /**
      * 
      * @type {string}
-     * @memberof CreateItemDto
+     * @memberof CreateItemWithPricesDto
      */
     'description'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof CreateItemWithPricesDto
+     */
+    'taxationId'?: number | null;
+    /**
+     * 
+     * @type {Array<CreatePriceItemDto>}
+     * @memberof CreateItemWithPricesDto
+     */
+    'priceItems'?: Array<CreatePriceItemDto> | null;
+    /**
+     * 
+     * @type {Array<CreateItemImageDto>}
+     * @memberof CreateItemWithPricesDto
+     */
+    'images'?: Array<CreateItemImageDto> | null;
 }
 /**
  * 
@@ -172,6 +215,56 @@ export interface CreatePriceItemDto {
 /**
  * 
  * @export
+ * @interface ItemCategoryDto
+ */
+export interface ItemCategoryDto {
+    /**
+     * 
+     * @type {number}
+     * @memberof ItemCategoryDto
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ItemCategoryDto
+     */
+    'categoryId'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface ItemImageDto
+ */
+export interface ItemImageDto {
+    /**
+     * 
+     * @type {number}
+     * @memberof ItemImageDto
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ItemImageDto
+     */
+    'base64Data'?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ItemImageDto
+     */
+    'isThumbnail'?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof ItemImageDto
+     */
+    'displayOrder'?: number;
+}
+/**
+ * 
+ * @export
  * @interface ItemResponseDto
  */
 export interface ItemResponseDto {
@@ -195,10 +288,40 @@ export interface ItemResponseDto {
     'description'?: string | null;
     /**
      * 
+     * @type {number}
+     * @memberof ItemResponseDto
+     */
+    'taxationId'?: number;
+    /**
+     * 
+     * @type {TaxationResponseDto}
+     * @memberof ItemResponseDto
+     */
+    'taxation'?: TaxationResponseDto;
+    /**
+     * 
+     * @type {string}
+     * @memberof ItemResponseDto
+     */
+    'createdAt'?: string;
+    /**
+     * 
      * @type {Array<PriceItemDto>}
      * @memberof ItemResponseDto
      */
     'priceItems'?: Array<PriceItemDto> | null;
+    /**
+     * 
+     * @type {Array<ItemCategoryDto>}
+     * @memberof ItemResponseDto
+     */
+    'itemCategories'?: Array<ItemCategoryDto> | null;
+    /**
+     * 
+     * @type {Array<ItemImageDto>}
+     * @memberof ItemResponseDto
+     */
+    'itemImages'?: Array<ItemImageDto> | null;
 }
 /**
  * 
@@ -298,6 +421,50 @@ export interface PriceItemDto {
      * @memberof PriceItemDto
      */
     'isSale'?: boolean;
+}
+/**
+ * 
+ * @export
+ * @interface ShippingRequestDto
+ */
+export interface ShippingRequestDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof ShippingRequestDto
+     */
+    'name'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof ShippingRequestDto
+     */
+    'cost'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface ShippingResponseDto
+ */
+export interface ShippingResponseDto {
+    /**
+     * 
+     * @type {number}
+     * @memberof ShippingResponseDto
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ShippingResponseDto
+     */
+    'name'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof ShippingResponseDto
+     */
+    'cost'?: number;
 }
 /**
  * 
@@ -403,6 +570,50 @@ export interface ShoppingCartSummaryDto {
      * @memberof ShoppingCartSummaryDto
      */
     'totalPrice'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface TaxationRequestDto
+ */
+export interface TaxationRequestDto {
+    /**
+     * 
+     * @type {string}
+     * @memberof TaxationRequestDto
+     */
+    'name'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaxationRequestDto
+     */
+    'rate'?: number;
+}
+/**
+ * 
+ * @export
+ * @interface TaxationResponseDto
+ */
+export interface TaxationResponseDto {
+    /**
+     * 
+     * @type {number}
+     * @memberof TaxationResponseDto
+     */
+    'id'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof TaxationResponseDto
+     */
+    'name'?: string | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof TaxationResponseDto
+     */
+    'rate'?: number;
 }
 
 /**
@@ -1001,6 +1212,42 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
     return {
         /**
          * 
+         * @param {CreateItemWithPricesDto} [createItemWithPricesDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiItemsCreateWithPricesPost: async (createItemWithPricesDto?: CreateItemWithPricesDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Items/create-with-prices`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(createItemWithPricesDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1107,42 +1354,6 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
                 options: localVarRequestOptions,
             };
         },
-        /**
-         * 
-         * @param {CreateItemDto} [createItemDto] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiItemsPost: async (createItemDto?: CreateItemDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/Items`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication Bearer required
-            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(createItemDto, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
     }
 };
 
@@ -1153,6 +1364,18 @@ export const ItemsApiAxiosParamCreator = function (configuration?: Configuration
 export const ItemsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = ItemsApiAxiosParamCreator(configuration)
     return {
+        /**
+         * 
+         * @param {CreateItemWithPricesDto} [createItemWithPricesDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiItemsCreateWithPricesPost(createItemWithPricesDto?: CreateItemWithPricesDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiItemsCreateWithPricesPost(createItemWithPricesDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiItemsCreateWithPricesPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
         /**
          * 
          * @param {*} [options] Override http request option.
@@ -1189,18 +1412,6 @@ export const ItemsApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiItemsIdPricePost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
-        /**
-         * 
-         * @param {CreateItemDto} [createItemDto] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async apiItemsPost(createItemDto?: CreateItemDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ItemResponseDto>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiItemsPost(createItemDto, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ItemsApi.apiItemsPost']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
     }
 };
 
@@ -1211,6 +1422,15 @@ export const ItemsApiFp = function(configuration?: Configuration) {
 export const ItemsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
     const localVarFp = ItemsApiFp(configuration)
     return {
+        /**
+         * 
+         * @param {CreateItemWithPricesDto} [createItemWithPricesDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiItemsCreateWithPricesPost(createItemWithPricesDto?: CreateItemWithPricesDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiItemsCreateWithPricesPost(createItemWithPricesDto, options).then((request) => request(axios, basePath));
+        },
         /**
          * 
          * @param {*} [options] Override http request option.
@@ -1238,15 +1458,6 @@ export const ItemsApiFactory = function (configuration?: Configuration, basePath
         apiItemsIdPricePost(id: number, createPriceItemDto?: CreatePriceItemDto, options?: RawAxiosRequestConfig): AxiosPromise<PriceItemDto> {
             return localVarFp.apiItemsIdPricePost(id, createPriceItemDto, options).then((request) => request(axios, basePath));
         },
-        /**
-         * 
-         * @param {CreateItemDto} [createItemDto] 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        apiItemsPost(createItemDto?: CreateItemDto, options?: RawAxiosRequestConfig): AxiosPromise<ItemResponseDto> {
-            return localVarFp.apiItemsPost(createItemDto, options).then((request) => request(axios, basePath));
-        },
     };
 };
 
@@ -1257,6 +1468,17 @@ export const ItemsApiFactory = function (configuration?: Configuration, basePath
  * @extends {BaseAPI}
  */
 export class ItemsApi extends BaseAPI {
+    /**
+     * 
+     * @param {CreateItemWithPricesDto} [createItemWithPricesDto] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ItemsApi
+     */
+    public apiItemsCreateWithPricesPost(createItemWithPricesDto?: CreateItemWithPricesDto, options?: RawAxiosRequestConfig) {
+        return ItemsApiFp(this.configuration).apiItemsCreateWithPricesPost(createItemWithPricesDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @param {*} [options] Override http request option.
@@ -1288,17 +1510,6 @@ export class ItemsApi extends BaseAPI {
      */
     public apiItemsIdPricePost(id: number, createPriceItemDto?: CreatePriceItemDto, options?: RawAxiosRequestConfig) {
         return ItemsApiFp(this.configuration).apiItemsIdPricePost(id, createPriceItemDto, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {CreateItemDto} [createItemDto] 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ItemsApi
-     */
-    public apiItemsPost(createItemDto?: CreateItemDto, options?: RawAxiosRequestConfig) {
-        return ItemsApiFp(this.configuration).apiItemsPost(createItemDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1474,6 +1685,385 @@ export class OrdersApi extends BaseAPI {
      */
     public apiOrdersPost(createOrderDto?: CreateOrderDto, options?: RawAxiosRequestConfig) {
         return OrdersApiFp(this.configuration).apiOrdersPost(createOrderDto, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * ShippingApi - axios parameter creator
+ * @export
+ */
+export const ShippingApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Shipping`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingIdDelete: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiShippingIdDelete', 'id', id)
+            const localVarPath = `/api/Shipping/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingIdGet: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiShippingIdGet', 'id', id)
+            const localVarPath = `/api/Shipping/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {ShippingRequestDto} [shippingRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingIdPut: async (id: number, shippingRequestDto?: ShippingRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiShippingIdPut', 'id', id)
+            const localVarPath = `/api/Shipping/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(shippingRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ShippingRequestDto} [shippingRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingPost: async (shippingRequestDto?: ShippingRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Shipping`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(shippingRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * ShippingApi - functional programming interface
+ * @export
+ */
+export const ShippingApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = ShippingApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShippingGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ShippingResponseDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShippingGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ShippingApi.apiShippingGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShippingIdDelete(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShippingIdDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ShippingApi.apiShippingIdDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShippingIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ShippingResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShippingIdGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ShippingApi.apiShippingIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {ShippingRequestDto} [shippingRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShippingIdPut(id: number, shippingRequestDto?: ShippingRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShippingIdPut(id, shippingRequestDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ShippingApi.apiShippingIdPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ShippingRequestDto} [shippingRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiShippingPost(shippingRequestDto?: ShippingRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiShippingPost(shippingRequestDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ShippingApi.apiShippingPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * ShippingApi - factory interface
+ * @export
+ */
+export const ShippingApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = ShippingApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<ShippingResponseDto>> {
+            return localVarFp.apiShippingGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingIdDelete(id: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiShippingIdDelete(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<ShippingResponseDto> {
+            return localVarFp.apiShippingIdGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {ShippingRequestDto} [shippingRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingIdPut(id: number, shippingRequestDto?: ShippingRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiShippingIdPut(id, shippingRequestDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {ShippingRequestDto} [shippingRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiShippingPost(shippingRequestDto?: ShippingRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiShippingPost(shippingRequestDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * ShippingApi - object-oriented interface
+ * @export
+ * @class ShippingApi
+ * @extends {BaseAPI}
+ */
+export class ShippingApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ShippingApi
+     */
+    public apiShippingGet(options?: RawAxiosRequestConfig) {
+        return ShippingApiFp(this.configuration).apiShippingGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ShippingApi
+     */
+    public apiShippingIdDelete(id: number, options?: RawAxiosRequestConfig) {
+        return ShippingApiFp(this.configuration).apiShippingIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ShippingApi
+     */
+    public apiShippingIdGet(id: number, options?: RawAxiosRequestConfig) {
+        return ShippingApiFp(this.configuration).apiShippingIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} id 
+     * @param {ShippingRequestDto} [shippingRequestDto] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ShippingApi
+     */
+    public apiShippingIdPut(id: number, shippingRequestDto?: ShippingRequestDto, options?: RawAxiosRequestConfig) {
+        return ShippingApiFp(this.configuration).apiShippingIdPut(id, shippingRequestDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {ShippingRequestDto} [shippingRequestDto] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ShippingApi
+     */
+    public apiShippingPost(shippingRequestDto?: ShippingRequestDto, options?: RawAxiosRequestConfig) {
+        return ShippingApiFp(this.configuration).apiShippingPost(shippingRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
@@ -1868,6 +2458,385 @@ export class ShoppingCartApi extends BaseAPI {
      */
     public apiShoppingCartSummaryCartIdGet(cartId: number, options?: RawAxiosRequestConfig) {
         return ShoppingCartApiFp(this.configuration).apiShoppingCartSummaryCartIdGet(cartId, options).then((request) => request(this.axios, this.basePath));
+    }
+}
+
+
+
+/**
+ * TaxationApi - axios parameter creator
+ * @export
+ */
+export const TaxationApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Taxation`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationIdDelete: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiTaxationIdDelete', 'id', id)
+            const localVarPath = `/api/Taxation/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationIdGet: async (id: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiTaxationIdGet', 'id', id)
+            const localVarPath = `/api/Taxation/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {TaxationRequestDto} [taxationRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationIdPut: async (id: number, taxationRequestDto?: TaxationRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiTaxationIdPut', 'id', id)
+            const localVarPath = `/api/Taxation/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(taxationRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {TaxationRequestDto} [taxationRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationPost: async (taxationRequestDto?: TaxationRequestDto, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/Taxation`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Bearer required
+            await setApiKeyToObject(localVarHeaderParameter, "Authorization", configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(taxationRequestDto, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * TaxationApi - functional programming interface
+ * @export
+ */
+export const TaxationApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = TaxationApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiTaxationGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<TaxationResponseDto>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTaxationGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TaxationApi.apiTaxationGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiTaxationIdDelete(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTaxationIdDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TaxationApi.apiTaxationIdDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiTaxationIdGet(id: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TaxationResponseDto>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTaxationIdGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TaxationApi.apiTaxationIdGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {TaxationRequestDto} [taxationRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiTaxationIdPut(id: number, taxationRequestDto?: TaxationRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTaxationIdPut(id, taxationRequestDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TaxationApi.apiTaxationIdPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {TaxationRequestDto} [taxationRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiTaxationPost(taxationRequestDto?: TaxationRequestDto, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiTaxationPost(taxationRequestDto, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['TaxationApi.apiTaxationPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * TaxationApi - factory interface
+ * @export
+ */
+export const TaxationApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = TaxationApiFp(configuration)
+    return {
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<TaxationResponseDto>> {
+            return localVarFp.apiTaxationGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationIdDelete(id: number, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiTaxationIdDelete(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationIdGet(id: number, options?: RawAxiosRequestConfig): AxiosPromise<TaxationResponseDto> {
+            return localVarFp.apiTaxationIdGet(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {number} id 
+         * @param {TaxationRequestDto} [taxationRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationIdPut(id: number, taxationRequestDto?: TaxationRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiTaxationIdPut(id, taxationRequestDto, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {TaxationRequestDto} [taxationRequestDto] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiTaxationPost(taxationRequestDto?: TaxationRequestDto, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.apiTaxationPost(taxationRequestDto, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * TaxationApi - object-oriented interface
+ * @export
+ * @class TaxationApi
+ * @extends {BaseAPI}
+ */
+export class TaxationApi extends BaseAPI {
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaxationApi
+     */
+    public apiTaxationGet(options?: RawAxiosRequestConfig) {
+        return TaxationApiFp(this.configuration).apiTaxationGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaxationApi
+     */
+    public apiTaxationIdDelete(id: number, options?: RawAxiosRequestConfig) {
+        return TaxationApiFp(this.configuration).apiTaxationIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaxationApi
+     */
+    public apiTaxationIdGet(id: number, options?: RawAxiosRequestConfig) {
+        return TaxationApiFp(this.configuration).apiTaxationIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {number} id 
+     * @param {TaxationRequestDto} [taxationRequestDto] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaxationApi
+     */
+    public apiTaxationIdPut(id: number, taxationRequestDto?: TaxationRequestDto, options?: RawAxiosRequestConfig) {
+        return TaxationApiFp(this.configuration).apiTaxationIdPut(id, taxationRequestDto, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {TaxationRequestDto} [taxationRequestDto] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TaxationApi
+     */
+    public apiTaxationPost(taxationRequestDto?: TaxationRequestDto, options?: RawAxiosRequestConfig) {
+        return TaxationApiFp(this.configuration).apiTaxationPost(taxationRequestDto, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

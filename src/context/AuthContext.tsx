@@ -5,16 +5,19 @@ interface AuthContextProps {
   token: string | null;
   login: (token: string) => void;
   logout: () => void;
+  isLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextProps>({
   token: null,
   login: () => {},
   logout: () => {},
+  isLoading: true,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,6 +25,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (storedToken) {
       setToken(storedToken);
     }
+    setIsLoading(false); // Mark loading complete
   }, []);
 
   const login = (newToken: string) => {
@@ -35,8 +39,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
+  if (isLoading) {
+    return <p>Loading...</p>; // Prevent rendering until token check is complete
+  }
+
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ token, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

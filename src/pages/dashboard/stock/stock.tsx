@@ -1,11 +1,13 @@
+// pages/dashboard/stock/stock.tsx
 import { useState, useEffect, useContext, FormEvent, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/DashboardLayout';
 import { AuthContext } from '@/context/AuthContext';
-// Import the API classes for items, taxation, and shipping
+// Import API classes from your generated API client
 import { ItemsApi, Configuration, TaxationApi, ShippingApi } from '@/api';
 import { useDropzone } from 'react-dropzone';
 
+// Define interfaces for your data
 interface Item {
   id: number;
   name: string;
@@ -28,50 +30,56 @@ interface ShippingOption {
 }
 
 export default function ItemsPage() {
-  const { token } = useContext(AuthContext);
+  const { token: contextToken } = useContext(AuthContext);
   const router = useRouter();
 
-  // State for items, error and loading
+  // Optionally, get token from localStorage as a fallback
+  const storedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const token = contextToken || storedToken;
+
+  // State for items, error and a loading indicator
   const [items, setItems] = useState<Item[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // State for filtering items
+  // State for search/filter input
   const [filter, setFilter] = useState('');
 
-  // Modal state for creating a new item
+  // State for modal visibility (to add a new item)
   const [showModal, setShowModal] = useState(false);
+  // New item form state
   const [newItemName, setNewItemName] = useState('');
   const [newItemDescription, setNewItemDescription] = useState('');
   const [newTaxationId, setNewTaxationId] = useState<number | ''>('');
   const [newPrice, setNewPrice] = useState<number | ''>('');
   const [isSale, setIsSale] = useState(false);
   const [newShippingId, setNewShippingId] = useState<number | ''>('');
-
-  // State to hold multiple image Base64 strings
+  // State for images (Base64 strings) uploaded via dropzone
   const [newImageBase64List, setNewImageBase64List] = useState<string[]>([]);
 
-  // State to hold fetched taxation options and shipping options
+  // State for fetched taxation and shipping options (to be shown in select dropdowns)
   const [taxationOptions, setTaxationOptions] = useState<TaxationOption[]>([]);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
 
-  // Memoize the API configuration and API clients
-  const config = useMemo(
-    () =>
-      new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL }),
-    []
-  );
+  // Memoize API configuration (include the token so that all requests carry it)
+  const config = useMemo(() => {
+    return new Configuration({
+      basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+      accessToken: token || undefined,
+    });
+  }, [token]);
+
   const itemsApi = useMemo(() => new ItemsApi(config), [config]);
   const taxationApi = useMemo(() => new TaxationApi(config), [config]);
   const shippingApi = useMemo(() => new ShippingApi(config), [config]);
 
-  // --- Fetch items only once on page load or when token becomes available ---
+  // Redirect to login if token is not present
   useEffect(() => {
     if (!token) {
       router.replace('/login');
       return;
     }
-
+    // Fetch items once when token is available.
     const fetchItems = async () => {
       try {
         const response = await itemsApi.apiItemsGet();
@@ -83,11 +91,10 @@ export default function ItemsPage() {
         setLoadingItems(false);
       }
     };
-
     fetchItems();
   }, [token, itemsApi, router]);
 
-  // --- Fetch taxation options only once ---
+  // Fetch taxation options (once)
   useEffect(() => {
     if (!token) return;
     const fetchTaxation = async () => {
@@ -101,7 +108,7 @@ export default function ItemsPage() {
     fetchTaxation();
   }, [token, taxationApi]);
 
-  // --- Fetch shipping options only once ---
+  // Fetch shipping options (once)
   useEffect(() => {
     if (!token) return;
     const fetchShipping = async () => {
@@ -115,32 +122,31 @@ export default function ItemsPage() {
     fetchShipping();
   }, [token, shippingApi]);
 
-  // --- Handler for adding a new item ---
+  // Handler for form submit that creates a new item
   const handleAddItem = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      // Build the payload matching CreateItemWithPricesDto
+      // Create payload to match CreateItemWithPricesDto
       const newItemData = {
         name: newItemName,
         description: newItemDescription,
         taxationId: newTaxationId === '' ? null : Number(newTaxationId),
         priceItems: newPrice === '' ? null : [{ price: Number(newPrice), isSale }],
-        images:
-          newImageBase64List.length > 0
-            ? newImageBase64List.map((img, index) => ({
-                base64Data: img,
-                // Mark the first image as the thumbnail and assign display order
-                isThumbnail: index === 0,
-                displayOrder: index + 1,
-              }))
-            : null,
-        // Uncomment the next line if your API directly accepts a shipping option:
+        images: newImageBase64List.length > 0
+          ? newImageBase64List.map((img, index) => ({
+              base64Data: img,
+              isThumbnail: index === 0,
+              displayOrder: index + 1,
+            }))
+          : null,
+        // If your API accepts a shipping option, you can pass shippingId:
         // shippingId: newShippingId === '' ? null : Number(newShippingId),
       };
 
       const response = await itemsApi.apiItemsCreateWithPricesPost(newItemData);
+      // Add the new item to the current list
       setItems((prev) => [...prev, response.data]);
-      // Reset form values and close the modal
+      // Reset the form fields and close modal
       setNewItemName('');
       setNewItemDescription('');
       setNewTaxationId('');
@@ -155,14 +161,14 @@ export default function ItemsPage() {
     }
   };
 
+  // Compute filtered items based on the filter text (case-insensitive search)
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(filter.toLowerCase())
   );
 
-  // --- Image dropzone handler (allows multiple images) ---
+  // Dropzone handler: Convert dropped files to Base64 strings and append them
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      // Convert all accepted files to Base64 and add them to the list
       const toBase64 = (file: File): Promise<string> =>
         new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -180,7 +186,6 @@ export default function ItemsPage() {
         const base64Files = await Promise.all(
           acceptedFiles.map((file) => toBase64(file))
         );
-        // Append new images to the existing list
         setNewImageBase64List((prev) => [...prev, ...base64Files]);
       } catch (error) {
         console.error('Error converting file(s):', error);
@@ -239,7 +244,9 @@ export default function ItemsPage() {
                   <td className="px-4 py-2">{item.description}</td>
                   <td className="px-4 py-2">
                     <button
-                      onClick={() => router.push(`/dashboard/stock/${item.id}`)}
+                      onClick={() =>
+                        router.push(`/dashboard/stock/${item.id}`)
+                      }
                       className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition"
                     >
                       Details
@@ -284,7 +291,9 @@ export default function ItemsPage() {
                 <select
                   value={newTaxationId}
                   onChange={(e) =>
-                    setNewTaxationId(e.target.value === '' ? '' : Number(e.target.value))
+                    setNewTaxationId(
+                      e.target.value === '' ? '' : Number(e.target.value)
+                    )
                   }
                   className="w-full border rounded p-2"
                 >
@@ -301,7 +310,9 @@ export default function ItemsPage() {
                 <select
                   value={newShippingId}
                   onChange={(e) =>
-                    setNewShippingId(e.target.value === '' ? '' : Number(e.target.value))
+                    setNewShippingId(
+                      e.target.value === '' ? '' : Number(e.target.value)
+                    )
                   }
                   className="w-full border rounded p-2"
                 >
@@ -334,7 +345,6 @@ export default function ItemsPage() {
               </div>
               <div>
                 <label className="block mb-1">Images</label>
-                {/* Multiple files dropzone */}
                 <div
                   {...getRootProps()}
                   className="border-dashed border-2 p-4 text-center cursor-pointer rounded"

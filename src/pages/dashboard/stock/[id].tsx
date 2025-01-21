@@ -89,7 +89,7 @@ export default function ItemDetailPage() {
   const [taxationOptions, setTaxationOptions] = useState<TaxationOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
 
-  // *** IMPORTANT: Define modal visibility state ***
+  // Modal visibility state for editing different sections
   const [showModal, setShowModal] = useState<{
     info: boolean;
     price: boolean;
@@ -102,12 +102,17 @@ export default function ItemDetailPage() {
     stocks: false
   });
 
-  // Memoized API configuration and clients
+  // Memoize the API configuration including the authorization token.
   const config = useMemo(
     () =>
-      new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL }),
-    []
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
   );
+
+  // Create API clients with the memoized configuration.
   const itemsApi = useMemo(() => new ItemsApi(config), [config]);
   const taxationApi = useMemo(() => new TaxationApi(config), [config]);
   const categoriesApi = useMemo(() => new CategoriesApi(config), [config]);
@@ -120,7 +125,7 @@ export default function ItemDetailPage() {
         const response = await itemsApi.apiItemsIdGet(Number(id));
         const data = response.data;
         setItem(data);
-        // Initialize editable fields
+        // Initialize editable fields based on fetched data
         setEditName(data.name);
         setEditDescription(data.description || '');
         setEditTaxationId(data.taxationId ?? '');
@@ -141,7 +146,7 @@ export default function ItemDetailPage() {
     fetchItem();
   }, [token, id, itemsApi]);
 
-  // Fetch taxation options once.
+  // Fetch taxation options once
   useEffect(() => {
     if (!token) return;
     const fetchTaxationOptions = async () => {
@@ -155,7 +160,7 @@ export default function ItemDetailPage() {
     fetchTaxationOptions();
   }, [token, taxationApi]);
 
-  // Fetch category options once.
+  // Fetch category options once
   useEffect(() => {
     if (!token) return;
     const fetchCategoryOptions = async () => {
@@ -202,14 +207,21 @@ export default function ItemDetailPage() {
   // Handlers for saving modal changes
   const handleInfoSave = (e: FormEvent) => {
     e.preventDefault();
-    console.log('Saving base info update:', { editName, editDescription, editTaxationId, selectedCategoryIds });
+    console.log('Saving base info update:', {
+      editName,
+      editDescription,
+      editTaxationId,
+      selectedCategoryIds
+    });
     if (item) {
       setItem({
         ...item,
         name: editName,
         description: editDescription,
         taxationId: editTaxationId === '' ? null : Number(editTaxationId),
-        itemCategories: categoryOptions.filter((cat) => selectedCategoryIds.includes(cat.id))
+        itemCategories: categoryOptions.filter((cat) =>
+          selectedCategoryIds.includes(cat.id)
+        )
       });
     }
     setShowModal((prev) => ({ ...prev, info: false }));
@@ -218,7 +230,7 @@ export default function ItemDetailPage() {
   const handlePriceSave = (e: FormEvent) => {
     e.preventDefault();
     console.log('Saving price items update');
-    // Update item.priceItems as needed
+    // (Update item.priceItems if you implement price update editing.)
     setShowModal((prev) => ({ ...prev, price: false }));
   };
 
@@ -278,7 +290,9 @@ export default function ItemDetailPage() {
             {/* Base Item Info */}
             <div className="mb-6">
               <h3 className="text-xl font-bold mb-2">Item Info</h3>
-              <p><strong>ID:</strong> {item.id}</p>
+              <p>
+                <strong>ID:</strong> {item.id}
+              </p>
               <p>
                 <strong>Name:</strong> {item.name}{' '}
                 <button
@@ -335,25 +349,41 @@ export default function ItemDetailPage() {
             <div>
               <nav className="flex space-x-4 border-b mb-4">
                 <button
-                  className={`py-2 px-4 ${activeTab === 'info' ? 'border-b-2 font-bold border-blue-500' : ''}`}
+                  className={`py-2 px-4 ${
+                    activeTab === 'info'
+                      ? 'border-b-2 font-bold border-blue-500'
+                      : ''
+                  }`}
                   onClick={() => setActiveTab('info')}
                 >
                   Info
                 </button>
                 <button
-                  className={`py-2 px-4 ${activeTab === 'price' ? 'border-b-2 font-bold border-blue-500' : ''}`}
+                  className={`py-2 px-4 ${
+                    activeTab === 'price'
+                      ? 'border-b-2 font-bold border-blue-500'
+                      : ''
+                  }`}
                   onClick={() => setActiveTab('price')}
                 >
                   Price Items
                 </button>
                 <button
-                  className={`py-2 px-4 ${activeTab === 'images' ? 'border-b-2 font-bold border-blue-500' : ''}`}
+                  className={`py-2 px-4 ${
+                    activeTab === 'images'
+                      ? 'border-b-2 font-bold border-blue-500'
+                      : ''
+                  }`}
                   onClick={() => setActiveTab('images')}
                 >
                   Images
                 </button>
                 <button
-                  className={`py-2 px-4 ${activeTab === 'stocks' ? 'border-b-2 font-bold border-blue-500' : ''}`}
+                  className={`py-2 px-4 ${
+                    activeTab === 'stocks'
+                      ? 'border-b-2 font-bold border-blue-500'
+                      : ''
+                  }`}
                   onClick={() => setActiveTab('stocks')}
                 >
                   Stocks
@@ -373,7 +403,8 @@ export default function ItemDetailPage() {
                       <ul>
                         {item.priceItems.map((pi, i) => (
                           <li key={i}>
-                            Price: {pi.price} – {pi.isSale ? 'On Sale' : 'Regular'}
+                            Price: {pi.price} –{' '}
+                            {pi.isSale ? 'On Sale' : 'Regular'}
                           </li>
                         ))}
                       </ul>
@@ -486,7 +517,10 @@ export default function ItemDetailPage() {
                   <label className="block mb-1">Categories:</label>
                   <div className="flex flex-wrap gap-2">
                     {categoryOptions.map((cat) => (
-                      <label key={cat.id} className="flex items-center gap-1 border rounded px-2 py-1">
+                      <label
+                        key={cat.id}
+                        className="flex items-center gap-1 border rounded px-2 py-1"
+                      >
                         <input
                           type="checkbox"
                           checked={selectedCategoryIds.includes(cat.id)}
@@ -528,7 +562,9 @@ export default function ItemDetailPage() {
                 <div className="flex justify-end gap-2 mt-4">
                   <button
                     type="button"
-                    onClick={() => setShowModal((prev) => ({ ...prev, price: false }))}
+                    onClick={() =>
+                      setShowModal((prev) => ({ ...prev, price: false }))
+                    }
                     className="bg-gray-300 text-black px-4 py-2 rounded"
                   >
                     Cancel
@@ -586,7 +622,9 @@ export default function ItemDetailPage() {
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowModal((prev) => ({ ...prev, images: false }))}
+                  onClick={() =>
+                    setShowModal((prev) => ({ ...prev, images: false }))
+                  }
                   className="bg-gray-300 text-black px-4 py-2 rounded"
                 >
                   Cancel
@@ -621,7 +659,9 @@ export default function ItemDetailPage() {
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowModal((prev) => ({ ...prev, stocks: false }))}
+                    onClick={() =>
+                      setShowModal((prev) => ({ ...prev, stocks: false }))
+                    }
                     className="bg-gray-300 text-black px-4 py-2 rounded"
                   >
                     Cancel

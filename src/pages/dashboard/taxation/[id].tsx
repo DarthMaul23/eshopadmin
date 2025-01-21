@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect, useContext, FormEvent } from 'react';
+import { useState, useEffect, useContext, FormEvent, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { AuthContext } from '@/context/AuthContext';
 import { TaxationApi, Configuration } from '@/api';
@@ -12,7 +12,7 @@ interface Taxation {
 
 export default function TaxationDetailPage() {
   const router = useRouter();
-  const { id } = router.query; // Dynamic route parameter
+  const { id } = router.query;
   const { token } = useContext(AuthContext);
   const [taxation, setTaxation] = useState<Taxation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,8 +20,15 @@ export default function TaxationDetailPage() {
   const [newName, setNewName] = useState('');
   const [newRate, setNewRate] = useState<number>(0);
 
-  const config = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL });
-  const taxationApi = new TaxationApi(config);
+  const config = useMemo(
+    () =>
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
+  );
+  const taxationApi = useMemo(() => new TaxationApi(config), [config]);
 
   useEffect(() => {
     if (!token || !id) return;
@@ -32,11 +39,12 @@ export default function TaxationDetailPage() {
           setTaxation(response.data);
           setNewName(response.data.name ?? '');
           setNewRate(response.data.rate ?? 0);
-          setLoading(false);
         })
         .catch((error) => {
           console.error(error);
           setErrorMsg('Failed to fetch taxation details.');
+        })
+        .finally(() => {
           setLoading(false);
         });
     }
@@ -46,7 +54,7 @@ export default function TaxationDetailPage() {
     e.preventDefault();
     if (!id) return;
     try {
-      // If your API supports updating, call it here:
+      // Implement your update call if available:
       console.log('Updating taxation id:', id, 'with new values:', newName, newRate);
       alert('Taxation updated (demo – implement update endpoint accordingly).');
     } catch (error) {

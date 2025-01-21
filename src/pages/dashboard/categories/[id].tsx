@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect, FormEvent, useContext } from 'react';
+import { useState, useEffect, FormEvent, useContext, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { AuthContext } from '@/context/AuthContext';
 import { CategoriesApi, Configuration } from '@/api';
@@ -7,40 +7,42 @@ import { CategoriesApi, Configuration } from '@/api';
 interface Category {
   id: number;
   name: string;
-  // Add additional fields such as "description" if your API provides them
 }
 
 export default function CategoryDetailPage() {
   const router = useRouter();
-  const { id } = router.query; // Dynamic route parameter (e.g., id = "1")
+  const { id } = router.query;
   const { token } = useContext(AuthContext);
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [newName, setNewName] = useState('');
 
-  // Configure the API client using the base URL from your .env.local.
-  // (Make sure your NEXT_PUBLIC_API_BASE_URL does NOT include an extra `/api` if your endpoints start with `/api`.)
-  const config = new Configuration({
-    basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
-  });
-  const categoriesApi = new CategoriesApi(config);
+  const config = useMemo(
+    () =>
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
+  );
+  const categoriesApi = useMemo(() => new CategoriesApi(config), [config]);
 
   useEffect(() => {
     if (!token || !id) return;
 
-    // If your generated client provides an endpoint to get a category by its ID:
     if (typeof id === 'string') {
       categoriesApi
         .apiCategoriesCategoryDetailIdGet(Number(id))
         .then((response) => {
           setCategory(response.data);
           setNewName(response.data.name);
-          setLoading(false);
         })
         .catch((error) => {
           console.error(error);
           setErrorMsg('Failed to fetch category details.');
+        })
+        .finally(() => {
           setLoading(false);
         });
     }
@@ -50,21 +52,17 @@ export default function CategoryDetailPage() {
     e.preventDefault();
     if (!id || !newName) return;
     try {
-      // If your API has an endpoint for updating a category (e.g., apiCategoriesPut),
-      // you would call it here. For now, we’ll simply log the new value.
       console.log('Updating category id:', id, 'with new name:', newName);
-      alert('Category updated (this is a demo – implement the update endpoint in your API client).');
-      // Optionally, refresh the data or navigate back:
-      // router.push('/dashboard/categories');
+      alert('Category updated (demo – implement update endpoint).');
+      // Optionally, navigate back:
+      // router.push('/dashboard/categories/categories');
     } catch (error) {
       console.error(error);
       setErrorMsg('Failed to update category.');
     }
   };
 
-  if (!token) {
-    return null;
-  }
+  if (!token) return null;
 
   return (
     <DashboardLayout>
@@ -89,7 +87,7 @@ export default function CategoryDetailPage() {
                 required
               />
             </div>
-            {/* Additional fields for editing can be added here */}
+            {/* Add additional fields here if necessary */}
             <div className="flex gap-4">
               <button
                 type="submit"

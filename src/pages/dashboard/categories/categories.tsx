@@ -1,6 +1,6 @@
-import { useState, useEffect, useContext, FormEvent } from 'react';
-import { useRouter } from 'next/router';
+import { useState, useEffect, useContext, FormEvent, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { useRouter } from 'next/router';
 import { AuthContext } from '@/context/AuthContext';
 import { CategoriesApi, Configuration } from '@/api';
 
@@ -17,12 +17,19 @@ export default function CategoriesPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [filter, setFilter] = useState('');
 
-  // State for modal visibility and new category name.
+  // Modal state for adding new category
   const [showModal, setShowModal] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  const config = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL });
-  const categoriesApi = new CategoriesApi(config);
+  const config = useMemo(
+    () =>
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
+  );
+  const categoriesApi = useMemo(() => new CategoriesApi(config), [config]);
 
   useEffect(() => {
     if (!token) {
@@ -34,11 +41,12 @@ export default function CategoriesPage() {
       .apiCategoriesGet()
       .then((response) => {
         setCategories(response.data || []);
-        setLoading(false);
       })
       .catch((error) => {
         console.error(error);
         setErrorMsg('Failed to fetch categories.');
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [token, router, categoriesApi]);
@@ -57,7 +65,6 @@ export default function CategoriesPage() {
     }
   };
 
-  // Filter categories by name (case-insensitive)
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(filter.toLowerCase())
   );
@@ -83,7 +90,6 @@ export default function CategoriesPage() {
         </div>
       </header>
 
-      {/* Scrollable Table Container */}
       <div className="overflow-x-auto border rounded bg-white shadow">
         {loading ? (
           <p className="p-4">Loading categories...</p>
@@ -105,7 +111,9 @@ export default function CategoriesPage() {
                   <td className="px-4 py-2">{category.name}</td>
                   <td className="px-4 py-2">
                     <button
-                      onClick={() => router.push(`/dashboard/categories/${category.id}`)}
+                      onClick={() =>
+                        router.push(`/dashboard/categories/${category.id}`)
+                      }
                       className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600 transition"
                     >
                       Details

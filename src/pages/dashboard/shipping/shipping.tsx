@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, FormEvent } from 'react';
+import { useState, useEffect, useContext, FormEvent, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter } from 'next/router';
 import { AuthContext } from '@/context/AuthContext';
@@ -23,8 +23,15 @@ export default function ShippingPage() {
   const [newShippingName, setNewShippingName] = useState('');
   const [newShippingCost, setNewShippingCost] = useState<number>(0);
 
-  const config = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL });
-  const shippingApi = new ShippingApi(config);
+  const config = useMemo(
+    () =>
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
+  );
+  const shippingApi = useMemo(() => new ShippingApi(config), [config]);
 
   useEffect(() => {
     if (!token) {
@@ -36,11 +43,12 @@ export default function ShippingPage() {
       .apiShippingGet()
       .then((response) => {
         setShippingVariants(response.data || []);
-        setLoading(false);
       })
       .catch((error) => {
         console.error(error);
         setErrorMsg('Failed to fetch shipping variants.');
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [token, router, shippingApi]);

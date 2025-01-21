@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect, useContext, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useContext, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { AuthContext } from '@/context/AuthContext';
 import { ShippingApi, Configuration } from '@/api';
@@ -12,7 +12,7 @@ interface ShippingVariant {
 
 export default function ShippingDetailPage() {
   const router = useRouter();
-  const { id } = router.query; // Dynamic route parameter
+  const { id } = router.query;
   const { token } = useContext(AuthContext);
   const [shipping, setShipping] = useState<ShippingVariant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,22 +20,31 @@ export default function ShippingDetailPage() {
   const [newName, setNewName] = useState('');
   const [newCost, setNewCost] = useState<number>(0);
 
-  const config = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL });
-  const shippingApi = new ShippingApi(config);
+  const config = useMemo(
+    () =>
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
+  );
+  const shippingApi = useMemo(() => new ShippingApi(config), [config]);
 
   useEffect(() => {
     if (!token || !id) return;
     if (typeof id === 'string') {
-      shippingApi.apiShippingIdGet(Number(id))
+      shippingApi
+        .apiShippingIdGet(Number(id))
         .then((response) => {
           setShipping(response.data);
           setNewName(response.data.name ?? '');
           setNewCost(response.data.cost ?? 0);
-          setLoading(false);
         })
         .catch((error) => {
           console.error(error);
           setErrorMsg('Failed to fetch shipping details.');
+        })
+        .finally(() => {
           setLoading(false);
         });
     }
@@ -45,9 +54,9 @@ export default function ShippingDetailPage() {
     e.preventDefault();
     if (!id) return;
     try {
-      // Implement your update logic here (e.g., shippingApi.apiShippingIdPut)
+      // Implement your update endpoint when available.
       console.log('Updating shipping id:', id, 'with new values:', newName, newCost);
-      alert('Shipping variant updated (demo – implement the update endpoint).');
+      alert('Shipping variant updated (demo – implement update endpoint).');
     } catch (error) {
       console.error(error);
       setErrorMsg('Failed to update shipping variant.');

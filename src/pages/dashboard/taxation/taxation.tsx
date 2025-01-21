@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, FormEvent } from 'react';
+import { useState, useEffect, useContext, FormEvent, useMemo } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { useRouter } from 'next/router';
 import { AuthContext } from '@/context/AuthContext';
@@ -23,8 +23,17 @@ export default function TaxationPage() {
   const [newTaxName, setNewTaxName] = useState('');
   const [newTaxRate, setNewTaxRate] = useState<number>(0);
 
-  const config = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_BASE_URL });
-  const taxationApi = new TaxationApi(config);
+  // Create a memoized API configuration including the access token.
+  const config = useMemo(
+    () =>
+      new Configuration({
+        basePath: process.env.NEXT_PUBLIC_API_BASE_URL,
+        accessToken: token || undefined,
+      }),
+    [token]
+  );
+
+  const taxationApi = useMemo(() => new TaxationApi(config), [config]);
 
   useEffect(() => {
     if (!token) {
@@ -36,11 +45,12 @@ export default function TaxationPage() {
       .apiTaxationGet()
       .then((response) => {
         setTaxations(response.data || []);
-        setLoading(false);
       })
       .catch((error) => {
         console.error(error);
         setErrorMsg('Failed to fetch taxations.');
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [token, router, taxationApi]);
